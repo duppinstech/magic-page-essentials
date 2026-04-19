@@ -1,96 +1,102 @@
-# Magic Page Tools & Enhancements
+# Magic Page Essentials
 
-A custom utility plugin for WordPress designed to extend, optimize, and enhance functionality for websites using the [Magic Page Plugin](https://magicpageplugin.com/). This plugin delivers essential features missing from the core Magic Page implementation, including advanced page management tools, custom admin filters, and a real-time analytics dashboard.
-
----
-
-## 🎛️ Features
-
-- **Custom Admin Filters**  
-  Adds additional filter options to the **Pages → All Pages** screen:
-  - Filter by **Magic Page Group** (using `_group_id` post meta).
-  - (Planned) Filter by **Magic Page Location** (using `_location_id` post meta).
-
-- **Magic Page Analytics Dashboard**  
-  Adds a powerful analytics dashboard under the **Magic Pages** menu featuring:
-  - Six dynamic Chart.js charts:
-    - Page visits over time
-    - Visits by group
-    - Visits by location
-    - Top 10 most visited Magic Pages
-    - 404 errors by URL
-    - Device type breakdown
-  - Live counters for:
-    - Total Magic Pages
-    - Total Groups
-    - Total Page Visits
-    - Average Visits per Page
-    - Total Redirects Detected
-  - Top 10 Magic Pages table by visit count
-
-- **Frontend Visit Tracking**  
-  Lightweight JavaScript injected on Magic Pages records page views via AJAX and stores visit data in post meta.
-
-- **Extendable Plugin Architecture**  
-  Structured for easy expansion to add new admin tools, metrics, filters, or workflow improvements.
+A companion plugin for WordPress that extends the [Magic Page Plugin](https://magicpageplugin.com/). Magic Page creates large numbers of SEO pages; this plugin keeps the admin organized and adds analytics so you can see how well those pages perform.
 
 ---
 
-## 📂 Project Structure
+## Features
 
-/magicpage-essentials/
+- **Filtered Pages list**  
+  On **Pages → All Pages**, the default view is **Non-Magic Pages** so you don’t see hundreds of SEO pages. Tabs:
+  - **All** – every page
+  - **Magic Pages** – only pages with `_location_id` (Magic Page–generated)
+  - **Non-Magic Pages** – regular pages only  
+  Optional **Group** dropdown filters by `_group_id` (uses `_magic_page_groups` from the parent plugin).
+
+- **Analytics dashboard**  
+  Under **Magic Pages → Analytics**:
+  - Charts: visits over time, by group, by location, top 10 pages, 404s (placeholder), device type (placeholder).
+  - **Top 10 Magic Pages** table with **Visits**, **Clicks**, and **CTR %** (conversion rate).
+
+- **Visit & click tracking**  
+  On the front end, when someone views a `magicpage` post:
+  - A page view is recorded via AJAX (stored in `magicpage_visits` / `magicpage_visit_count`).
+  - Clicks on outbound links are recorded for CTR/conversion (stored in `magicpage_clicks` / `magicpage_click_count`).
+
+- **Extensible**  
+  Structured so you can add more filters, metrics, or export later.
+
+---
+
+## Project structure
+
+```
+magic-page-essentials/
 ├── assets/
-│ ├── css/
-│ │ └── magicpage-analytics.css
-│ └── js/
-│ └── magicpage-analytics.js
+│   ├── css/
+│   │   └── magicpage-analytics.css
+│   └── js/
+│       ├── magicpage-analytics.js      (admin dashboard charts + table)
+│       └── magicpage-frontend-analytics.js  (visit + link click tracking)
 ├── includes/
-│ └── class-magicpage-analytics-dashboard.php
-├── magicpage-frontend-analytics.js
-├── magicpage-tools.php
-└── readme.md
-
-
----
-
-## 🚀 Installation
-
-1. Upload the plugin files to `/wp-content/plugins/magicpage-essentials/`.
-2. Activate via the **Plugins** menu in WordPress.
-3. New functionality appears under **Magic Pages → Analytics** and **Pages → All Pages**.
+│   ├── admin-functions.php             (Pages list views + filters)
+│   ├── class-admin-dashboard.php       (Analytics menu, AJAX, enqueue)
+│   └── class-magic-pages-table.php     (optional list table; not loaded by default)
+├── magic-page-essentials.php          (bootstrap, constants)
+└── README.md
+```
 
 ---
 
-## 📈 Usage
+## Installation
 
-- Use the **Magic Page Group** filter in **Pages → All Pages** to quickly locate pages by group.
-- View real-time visit data and performance trends under **Magic Pages → Analytics**.
-- Visit data is captured automatically via a frontend JavaScript tracker.
-- (Planned) Additional filters for location, visit logs, and per-page modals.
-
----
-
-## ⚙️ Roadmap
-
-- Extend admin filters to cover Magic Page Locations.
-- Add per-page analytics modals from the Magic Pages list table.
-- Log 404 errors and device types via frontend tracking.
-- Export analytics data (CSV / JSON).
-- Customizable date ranges and timeframes.
-- Additional Magic Page management utilities.
+1. Upload the plugin to `/wp-content/plugins/magic-page-essentials/`.
+2. Activate it in **Plugins**. The parent **Magic Page Plugin** must be active.
+3. Use **Pages → All Pages** (defaults to Non-Magic) and **Magic Pages → Analytics** for metrics.
 
 ---
 
-## 📄 License
+## Usage
 
-Proprietary utility plugin developed as a companion toolkit for Magic Page Plugin sites.  
-Redistribution without permission is prohibited.
+- **Pages screen:** Use **Non-Magic Pages** (default), **Magic Pages**, or **All**. Use **Group** to narrow by Magic Page group.
+- **Analytics:** Open **Magic Pages → Analytics** to see visit trends, top pages, and CTR. Data is loaded via AJAX; the table shows visits, clicks, and CTR % per page.
+- Tracking is automatic on singular `magicpage` views: one request records the view, and link clicks on the page are sent to `magicpage_record_click`.
+
+---
+
+## GitHub and updates
+
+This project is versioned on GitHub. To keep your repo and deployments in sync:
+
+1. Commit and push after making changes:
+   ```bash
+   git add .
+   git commit -m "Describe your change"
+   git push origin main
+   ```
+2. Use tags for releases (e.g. `v1.0.0`) so you can track what’s deployed.
+
+---
+
+## Roadmap
+
+- Filter by Magic Page location in the Pages list.
+- Per-page analytics modal from the Magic Pages list.
+- Real 404 and device logging from frontend tracking.
+- Export analytics (CSV/JSON).
+- Configurable date ranges.
+
+---
+
+## License
+
+Companion plugin for sites using Magic Page Plugin. Redistribution without permission is prohibited.
 
 **Author:** [Odell Duppins Jr](https://github.com/oduppinsjr)  
 **Company:** Duppins Technology
 
 ---
 
-## 📞 Support
+## Support
 
-For feedback, improvements, or technical questions, submit an issue on this repository or contact via [Duppins Technology](https://duppinstech.com).
+Open an issue on this repository or contact [Duppins Technology](https://duppinstech.com).

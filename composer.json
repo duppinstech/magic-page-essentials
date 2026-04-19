@@ -1,0 +1,12 @@
+{
+    "name": "duppinstech/magic-page-essentials",
+    "description": "WordPress plugin (use composer only for dev/vendor; site installs use bundled vendor).",
+    "license": "GPL-2.0-or-later",
+    "require": {
+        "php": ">=7.4",
+        "yahnis-elsts/plugin-update-checker": "5"
+    },
+    "config": {
+        "sort-packages": true
+    }
+}

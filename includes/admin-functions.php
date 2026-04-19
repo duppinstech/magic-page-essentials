@@ -1,5 +1,35 @@
 <?php
 
+// Add "Magic Pages" as a submenu under Pages (same list, defaulting to magic pages only)
+add_action( 'admin_menu', 'mpe_add_magic_pages_submenu_under_pages', 20 );
+function mpe_add_magic_pages_submenu_under_pages() {
+	add_submenu_page(
+		'edit.php?post_type=page',
+		__( 'Magic Pages', 'magic-page-essentials' ),
+		__( 'Magic Pages', 'magic-page-essentials' ),
+		'edit_pages',
+		'magic-pages-list',
+		'mpe_redirect_to_magic_pages_list'
+	);
+}
+
+function mpe_redirect_to_magic_pages_list() {
+	wp_safe_redirect( admin_url( 'edit.php?post_type=page&magic_pages=1' ) );
+	exit;
+}
+
+// When viewing the magic-pages-filtered list, highlight "Magic Pages" in the submenu
+add_action( 'admin_menu', 'mpe_set_magic_pages_submenu_current', 999 );
+function mpe_set_magic_pages_submenu_current() {
+	global $pagenow, $submenu_file;
+	if ( $pagenow !== 'edit.php' || ! isset( $_GET['post_type'] ) || $_GET['post_type'] !== 'page' ) {
+		return;
+	}
+	if ( isset( $_GET['magic_pages'] ) && $_GET['magic_pages'] === '1' ) {
+		$submenu_file = 'magic-pages-list';
+	}
+}
+
 // Add view tabs to the Pages admin list
 function add_magic_pages_views( $views ) {
     global $wpdb;
@@ -85,46 +115,6 @@ function filter_magic_pages_in_admin_query( $query ) {
 }
 add_action( 'pre_get_posts', 'filter_magic_pages_in_admin_query' );
 
-
-function filter_pages_by_magic_status( $query ) {
-    global $pagenow, $typenow;
-
-    if ( ! is_admin() || !$query->is_main_query() ) {
-        return;
-    }
-
-    if ( $pagenow !== 'edit.php' || $typenow !== 'page' ) {
-        return;
-    }
-
-    // Grab the filter from URL
-    $magicpages = isset( $_GET['magic_pages'] ) ? $_GET['magic_pages'] : null;
-
-    if ( $magicpages === '1' ) {
-        // Show only Magic Pages (meta exists)
-        $query->set( 'meta_query', [
-            [
-                'key'     => '_location_id',
-                'compare' => 'EXISTS',
-            ],
-        ] );
-    } elseif ( $magicpages === '0' ) {
-        // Show only Non-Magic Pages (meta does not exist)
-        $query->set( 'meta_query', [
-            [
-                'key'     => '_location_id',
-                'compare' => 'NOT EXISTS',
-            ],
-        ] );
-    } else {
-        // No magicpages filter — show all pages (no meta_query alteration)
-        $query->set( 'meta_query', [] ); // or leave it untouched to default
-    }
-
-    // The post_status filter is handled automatically by WP based on URL params like &post_status=publish
-}
-add_action( 'pre_get_posts', 'filter_pages_by_magic_status' );
-
 function redirect_pages_to_non_magic_default() {
     global $pagenow;
 
@@ -163,11 +153,12 @@ function add_magic_page_group_filter() {
     echo '<select name="_group_id">';
     echo '<option value="">All Groups</option>';
     foreach ( $groups as $group_id => $group_data ) {
+        $title = is_array( $group_data ) && isset( $group_data['title'] ) ? $group_data['title'] : ( is_string( $group_data ) ? $group_data : (string) $group_id ) ;
         printf(
             '<option value="%s"%s>%s</option>',
             esc_attr( $group_id ),
             selected( $selected, $group_id, false ),
-            esc_html( $group_data['title'] )
+            esc_html( $title )
         );
     }
     echo '</select>';

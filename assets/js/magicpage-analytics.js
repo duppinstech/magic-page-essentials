@@ -1,95 +1,273 @@
 jQuery(document).ready(function($) {
-    $.post(MagicPageAnalytics.ajax_url, {
-        action: 'magicpage_analytics_data',
-        nonce: MagicPageAnalytics.nonce
-    }, function(response) {
-        if (!response.success) {
-            console.error('Failed to fetch analytics data.');
+    var config = typeof magicpageAnalytics !== 'undefined' ? magicpageAnalytics : (typeof MagicPageAnalytics !== 'undefined' ? MagicPageAnalytics : null);
+    if (!config) {
+        console.error('Magic Page Analytics: config not found.');
+        return;
+    }
+
+    var perPage = parseInt(config.per_page, 10) || 25;
+    var i18n = config.i18n || {};
+
+    var state = {
+        locationsAll: [],
+        topPagesAll: [],
+        locPage: 1,
+        pagesPage: 1
+    };
+
+    function esc(s) {
+        if (s == null || s === '') return '—';
+        var div = document.createElement('div');
+        div.textContent = s;
+        return div.innerHTML;
+    }
+
+    function pageCount(total, size) {
+        return Math.max(1, Math.ceil(total / size));
+    }
+
+    function sprintfPageOf(cur, tot) {
+        var t = i18n.page_of || 'Page %1$s of %2$s';
+        return t.replace('%1$s', String(cur)).replace('%2$s', String(tot));
+    }
+
+    function bindPager($wrap, page, totalItems, onPage) {
+        if (!$wrap.length) return;
+        var totalPages = pageCount(totalItems, perPage);
+        if (totalItems === 0) {
+            $wrap.attr('hidden', true).empty();
+            return;
+        }
+        if (totalPages <= 1) {
+            $wrap.attr('hidden', true).empty();
+            return;
+        }
+        $wrap.removeAttr('hidden');
+        var prevDis = page <= 1 ? ' disabled' : '';
+        var nextDis = page >= totalPages ? ' disabled' : '';
+        var html = '<div class="mpe-pager-inner">' +
+            '<button type="button" class="button mpe-pager-prev"' + prevDis + '>' + esc(i18n.prev || '« Previous') + '</button>' +
+            '<span class="mpe-pager-status">' + esc(sprintfPageOf(page, totalPages)) + '</span>' +
+            '<button type="button" class="button mpe-pager-next"' + nextDis + '>' + esc(i18n.next || 'Next »') + '</button>' +
+            '</div>';
+        $wrap.html(html);
+        $wrap.find('.mpe-pager-prev').on('click', function() {
+            if (page > 1) onPage(page - 1);
+        });
+        $wrap.find('.mpe-pager-next').on('click', function() {
+            if (page < totalPages) onPage(page + 1);
+        });
+    }
+
+    function renderLocationsSlice() {
+        var locationsTbody = document.getElementById('locations-tbody');
+        var $pager = $('#mpe-locations-pager');
+        if (!locationsTbody) return;
+
+        var all = state.locationsAll;
+        if (!all.length) {
+            locationsTbody.innerHTML = '<tr><td colspan="6">No location data yet. Visits and clicks on tracked pages will show here.</td></tr>';
+            $pager.attr('hidden', true).empty();
             return;
         }
 
-        const data = response.data;
+        var start = (state.locPage - 1) * perPage;
+        var slice = all.slice(start, start + perPage);
+        locationsTbody.innerHTML = slice.map(function(loc) {
+            return '<tr><td>' + esc(loc.label) + '</td><td>' + esc(loc.region) + '</td><td>' + (loc.pages || 0) + '</td><td>' + (loc.visits || 0).toLocaleString() + '</td><td>' + (loc.clicks || 0).toLocaleString() + '</td><td>' + (loc.ctr != null ? loc.ctr + '%' : '—') + '</td></tr>';
+        }).join('');
 
-        // 1️⃣ Page Visits Over Time
-        new Chart(document.getElementById('chart-page-visits-over-time'), {
-            type: 'line',
-            data: {
-                labels: Object.keys(data.visits_over_time),
-                datasets: [{
-                    label: 'Visits',
-                    data: Object.values(data.visits_over_time),
-                    backgroundColor: 'rgba(75,192,192,0.4)',
-                    borderColor: 'rgba(75,192,192,1)',
-                    fill: true
-                }]
-            }
+        bindPager($pager, state.locPage, all.length, function(p) {
+            state.locPage = p;
+            renderLocationsSlice();
         });
+    }
 
-        // 2️⃣ Visits by Group
-        new Chart(document.getElementById('chart-visits-by-group'), {
-            type: 'bar',
-            data: {
-                labels: Object.keys(data.visits_by_group),
-                datasets: [{
-                    label: 'Pages',
-                    data: Object.values(data.visits_by_group),
-                    backgroundColor: '#4285f4'
-                }]
-            }
+    function renderTopPagesSlice() {
+        var topPagesTbody = document.getElementById('top-pages-tbody');
+        var $pager = $('#mpe-top-pages-pager');
+        if (!topPagesTbody) return;
+
+        var all = state.topPagesAll;
+        if (!all.length) {
+            topPagesTbody.innerHTML = '<tr><td colspan="4">No page data yet.</td></tr>';
+            $pager.attr('hidden', true).empty();
+            return;
+        }
+
+        var start = (state.pagesPage - 1) * perPage;
+        var slice = all.slice(start, start + perPage);
+        topPagesTbody.innerHTML = slice.map(function(p) {
+            return '<tr><td>' + esc(p.title) + '</td><td>' + (p.count || 0).toLocaleString() + '</td><td>' + (p.clicks || 0).toLocaleString() + '</td><td>' + (p.ctr != null ? p.ctr + '%' : '—') + '</td></tr>';
+        }).join('');
+
+        bindPager($pager, state.pagesPage, all.length, function(p) {
+            state.pagesPage = p;
+            renderTopPagesSlice();
         });
+    }
 
-        // 3️⃣ Visits by Location
-        new Chart(document.getElementById('chart-visits-by-location'), {
-            type: 'bar',
-            data: {
-                labels: Object.keys(data.visits_by_location),
-                datasets: [{
-                    label: 'Pages',
-                    data: Object.values(data.visits_by_location),
-                    backgroundColor: '#fbbc05'
-                }]
-            }
-        });
+    $.post(config.ajax_url, {
+        action: 'magicpage_analytics_data',
+        nonce: config.nonce
+    }, function(response) {
+        if (!response.success) {
+            document.getElementById('top-pages-tbody') && (document.getElementById('top-pages-tbody').innerHTML = '<tr><td colspan="4">Failed to load data.</td></tr>');
+            var lb = document.getElementById('locations-tbody');
+            if (lb) lb.innerHTML = '<tr><td colspan="6">Failed to load data.</td></tr>';
+            return;
+        }
 
-        // 4️⃣ Top 10 Most Visited Pages
-        new Chart(document.getElementById('chart-top-pages'), {
-            type: 'horizontalBar',
-            data: {
-                labels: data.top_pages.map(p => p.title),
-                datasets: [{
-                    label: 'Visits',
-                    data: data.top_pages.map(p => p.count),
-                    backgroundColor: '#34a853'
-                }]
-            }
-        });
+        var data = response.data;
 
-        // 5️⃣ 404 Errors by URL
-        new Chart(document.getElementById('chart-404s'), {
-            type: 'bar',
-            data: {
-                labels: Object.keys(data.errors_404),
-                datasets: [{
-                    label: '404s',
-                    data: Object.values(data.errors_404),
-                    backgroundColor: '#ea4335'
-                }]
-            }
-        });
+        var s = data.summary || {};
+        var locEl = document.getElementById('mpe-stat-locations');
+        var visEl = document.getElementById('mpe-stat-visits');
+        var clkEl = document.getElementById('mpe-stat-clicks');
+        var ctrEl = document.getElementById('mpe-stat-ctr');
+        if (locEl) locEl.textContent = s.total_locations != null ? s.total_locations : '—';
+        if (visEl) visEl.textContent = s.total_visits != null ? s.total_visits.toLocaleString() : '—';
+        if (clkEl) clkEl.textContent = s.total_clicks != null ? s.total_clicks.toLocaleString() : '—';
+        if (ctrEl) ctrEl.textContent = s.overall_ctr != null ? s.overall_ctr + '%' : '—';
 
-        // 6️⃣ Page Visits by Device Type
-        new Chart(document.getElementById('chart-device-type'), {
-            type: 'pie',
-            data: {
-                labels: Object.keys(data.device_types),
-                datasets: [{
-                    data: Object.values(data.device_types),
-                    backgroundColor: ['#3367d6', '#ff7043', '#9c27b0']
-                }]
-            }
-        });
+        state.locationsAll = data.locations_all || data.top_locations || [];
+        state.topPagesAll = data.top_pages_all || data.top_pages || [];
+        state.locPage = 1;
+        state.pagesPage = 1;
 
+        renderLocationsSlice();
+        renderTopPagesSlice();
+
+        var visitsOverTime = data.visits_over_time || {};
+        var votLabels = Object.keys(visitsOverTime);
+        var votData = Object.values(visitsOverTime);
+        var votEl = document.getElementById('chart-page-visits-over-time');
+        if (votEl && votLabels.length) {
+            new Chart(votEl, {
+                type: 'line',
+                data: {
+                    labels: votLabels,
+                    datasets: [{
+                        label: 'Visits',
+                        data: votData,
+                        borderColor: 'rgb(59, 130, 246)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        fill: true,
+                        tension: 0.2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { ticks: { maxRotation: 45 } },
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        } else if (votEl) {
+            votEl.parentNode.innerHTML = '<p class="mpe-no-data">No visit data for the last 30 days yet.</p>';
+        }
+
+        var locations = state.locationsAll.slice();
+        var locVisitsEl = document.getElementById('chart-locations-visits');
+        if (locVisitsEl && locations.length) {
+            var locLabels = locations.slice(0, 10).map(function(l) { return l.label; });
+            var locVisits = locations.slice(0, 10).map(function(l) { return l.visits; });
+            new Chart(locVisitsEl, {
+                type: 'bar',
+                data: {
+                    labels: locLabels,
+                    datasets: [{
+                        label: 'Visits',
+                        data: locVisits,
+                        backgroundColor: 'rgba(34, 197, 94, 0.7)',
+                        borderColor: 'rgb(34, 197, 94)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { beginAtZero: true },
+                        y: { ticks: { maxRotation: 0 } }
+                    }
+                }
+            });
+        } else if (locVisitsEl) {
+            locVisitsEl.parentNode.innerHTML = '<p class="mpe-no-data">No data yet.</p>';
+        }
+
+        var locClicksEl = document.getElementById('chart-locations-clicks');
+        if (locClicksEl && locations.length) {
+            var locLabels2 = locations.slice(0, 10).map(function(l) { return l.label; });
+            var locClicks = locations.slice(0, 10).map(function(l) { return l.clicks; });
+            new Chart(locClicksEl, {
+                type: 'bar',
+                data: {
+                    labels: locLabels2,
+                    datasets: [{
+                        label: 'Conversions',
+                        data: locClicks,
+                        backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                        borderColor: 'rgb(59, 130, 246)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { beginAtZero: true },
+                        y: { ticks: { maxRotation: 0 } }
+                    }
+                }
+            });
+        } else if (locClicksEl) {
+            locClicksEl.parentNode.innerHTML = '<p class="mpe-no-data">No data yet.</p>';
+        }
     }).fail(function() {
-        console.error('AJAX request failed.');
+        console.error('Analytics AJAX failed.');
+        var t = document.getElementById('top-pages-tbody');
+        if (t) t.innerHTML = '<tr><td colspan="4">Failed to load.</td></tr>';
+        var lb = document.getElementById('locations-tbody');
+        if (lb) lb.innerHTML = '<tr><td colspan="6">Failed to load.</td></tr>';
+    });
+
+    $('#mpe-clear-unassigned-stats').on('click', function() {
+        var msg = (config.i18n && config.i18n.clear_unassigned_confirm)
+            ? config.i18n.clear_unassigned_confirm
+            : 'Clear unassigned stats?';
+        if (!window.confirm(msg)) {
+            return;
+        }
+        var $btn = $(this);
+        $btn.prop('disabled', true);
+        $.post(config.ajax_url, {
+            action: 'magicpage_analytics_clear_unassigned',
+            nonce: config.nonce
+        }, function(response) {
+            if (!response.success) {
+                window.alert('Could not clear stats.');
+                $btn.prop('disabled', false);
+                return;
+            }
+            var d = response.data || {};
+            var done = (config.i18n && config.i18n.clear_unassigned_done)
+                ? config.i18n.clear_unassigned_done
+                : 'Cleared %1$s page(s).';
+            done = done.replace('%1$s', String(d.cleared_posts != null ? d.cleared_posts : 0));
+            window.alert(done);
+            window.location.reload();
+        }).fail(function() {
+            window.alert('Request failed.');
+            $btn.prop('disabled', false);
+        });
     });
 });

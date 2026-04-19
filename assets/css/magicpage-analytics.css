@@ -1,56 +1,215 @@
+/* Magic Page Essentials — Analytics dashboard (modern) */
+
 .magicpage-analytics-dashboard {
-  padding: 20px;
+  padding: 0 0 2rem;
+  max-width: 1400px;
 }
 
-.dashboard-counters {
+/* Header */
+.mpe-dash-header {
+  margin-bottom: 1.75rem;
+}
+
+.mpe-dash-title {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 0.25rem;
+}
+
+.mpe-dash-subtitle {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.9375rem;
+}
+
+/* Summary cards */
+.mpe-summary-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.mpe-card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.mpe-card-stat {
+  padding: 1.25rem 1.5rem;
+  text-align: center;
+}
+
+.mpe-stat-value {
+  display: block;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+.mpe-stat-label {
+  display: block;
+  font-size: 0.8125rem;
+  color: #64748b;
+  margin-top: 0.25rem;
+}
+
+/* Sections */
+.mpe-section {
+  margin-bottom: 2.5rem;
+}
+
+.mpe-section-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 0.35rem;
+}
+
+.mpe-section-desc {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0 0 1rem;
+}
+
+.mpe-tools {
+  margin: 0 0 1rem;
   display: flex;
   flex-wrap: wrap;
-  gap: 20px;
-  margin-bottom: 30px;
+  align-items: center;
+  gap: 0.75rem 1rem;
 }
 
-.dashboard-counter {
-  flex: 1 1 200px;
-  background: #fff;
-  padding: 15px 20px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 16px;
+.mpe-tools .description {
+  flex: 1 1 240px;
+  margin: 0;
+  color: #64748b;
+  font-size: 0.8125rem;
 }
 
-.dashboard-charts {
+.mpe-section-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
-  margin-bottom: 30px;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 1.25rem;
 }
 
-.dashboard-chart {
-  background: #fff;
-  padding: 20px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
+/* Card types */
+.mpe-card-chart {
+  padding: 1.25rem;
 }
 
-.dashboard-chart h2 {
-  font-size: 16px;
-  margin-bottom: 12px;
+.mpe-card-chart.mpe-chart-wide {
+  grid-column: 1 / -1;
 }
 
-.dashboard-chart canvas {
-  width: 100% !important;
-  height: 250px !important;
+.mpe-card-heading {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #334155;
+  margin: 0 0 1rem;
 }
 
-.dashboard-tables {
-  margin-top: 30px;
+.mpe-chart-wrap {
+  position: relative;
+  height: 280px;
 }
 
-.dashboard-tables h2 {
-  margin-bottom: 12px;
+.mpe-chart-wrap canvas {
+  max-height: 280px;
 }
 
-.wp-list-table {
-  background: #fff;
-  border: 1px solid #ddd;
+.mpe-no-data {
+  margin: 0;
+  padding: 1.5rem;
+  color: #64748b;
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+/* Tables */
+.mpe-card-table {
+  padding: 1.25rem;
+  overflow: hidden;
+}
+
+.mpe-table-scroll {
+  overflow-x: auto;
+}
+
+.mpe-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.mpe-table th,
+.mpe-table td {
+  padding: 0.65rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.mpe-table th {
+  font-weight: 600;
+  color: #475569;
+  background: #f8fafc;
+}
+
+.mpe-table tbody tr:hover {
+  background: #f8fafc;
+}
+
+.mpe-table td {
+  color: #334155;
+}
+
+/* Pagination under tables */
+.mpe-pager {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.mpe-pager-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+}
+
+.mpe-pager-status {
+  font-size: 0.8125rem;
+  color: #64748b;
+  min-width: 8rem;
+  text-align: center;
+}
+
+.mpe-pager .button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Admin dark mode / high contrast */
+body.admin-color-modern .mpe-dash-title,
+body.admin-color-modern .mpe-stat-value { color: #1e293b; }
+body.admin-color-modern .mpe-card { border-color: #e2e8f0; }
+
+@media (max-width: 782px) {
+  .mpe-summary-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .mpe-section-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mpe-stat-value {
+    font-size: 1.5rem;
+  }
 }
