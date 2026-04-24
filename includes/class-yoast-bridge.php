@@ -178,7 +178,6 @@ class MPE_Yoast_Bridge {
 		$slug = ( $term_ok && isset( $term->slug ) ) ? (string) $term->slug : '';
 
 		$tid = ( $term_ok && isset( $term->term_id ) ) ? (int) $term->term_id : 0;
-		$tax = ( $term_ok && isset( $term->taxonomy ) ) ? $term->taxonomy : 'location';
 
 		$region  = $tid ? (string) get_term_meta( $tid, 'region', true ) : '';
 		$zip     = $tid ? (string) get_term_meta( $tid, 'zip', true ) : '';
@@ -188,11 +187,11 @@ class MPE_Yoast_Bridge {
 		$lon     = $tid ? (string) get_term_meta( $tid, 'lon', true ) : '';
 
 		$desc = '';
-		if ( $tid && $tax ) {
-			$desc = term_description( $tid, $tax );
+		if ( $tid ) {
+			$desc = term_description( $tid );
 			$desc = is_string( $desc ) ? $desc : '';
 			/** This filter is documented in the Magic Page Essentials Yoast bridge. */
-			$desc = apply_filters( 'mpp_yoast_bridge_term_description', $desc, $term );
+			$desc = apply_filters( 'magic_page_essentials_yoast_bridge_term_description', $desc, $term );
 			$desc = wp_strip_all_tags( $desc );
 		}
 
@@ -336,10 +335,10 @@ class MPE_Yoast_Bridge {
 				if ( ! $term || is_wp_error( $term ) || empty( $term->term_id ) ) {
 					return '';
 				}
-				$text = term_description( $term->term_id, $term->taxonomy );
+				$text = term_description( $term->term_id );
 				$text = is_string( $text ) ? $text : '';
 				/** This filter is documented in the Magic Page Essentials Yoast bridge. */
-				$text = apply_filters( 'mpp_yoast_bridge_term_description', $text, $term );
+				$text = apply_filters( 'magic_page_essentials_yoast_bridge_term_description', $text, $term );
 				return wp_strip_all_tags( $text );
 			},
 			'advanced',
@@ -356,10 +355,11 @@ class MPE_Yoast_Bridge {
 }
 
 /**
- * Back-compat for any code referencing the old MU-plugin global helpers.
+ * Back-compat entry point for the Yoast bridge location resolver.
  *
+ * @param object|null $yoast_args Optional Yoast replace-vars context.
  * @return WP_Term|null
  */
-function mpp_yoast_bridge_get_location_term( $yoast_args = null ) {
+function magic_page_essentials_yoast_bridge_get_location_term( $yoast_args = null ) {
 	return MPE_Yoast_Bridge::get_location_term( $yoast_args );
 }

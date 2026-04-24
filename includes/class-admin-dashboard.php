@@ -83,40 +83,53 @@ class MagicPage_Analytics_Dashboard {
 			)
 		);
 
+		$static_ids = array();
 		if ( ! Magic_Page_Essentials_Settings::is_feature_enabled( 'analytics_include_static_pages' ) ) {
-			return $magicpages;
+			$merged = $magicpages;
+		} else {
+			// Export-to-static writes _group_id and _batch_id; _location_id alone may exist from the admin
+			// "Location & Group" metabox without an export (see wp-whiterail-seo export-to-static.php meta_input).
+			$static_ids = get_posts(
+				array(
+					'post_type'              => array( 'page', 'post' ),
+					'posts_per_page'         => -1,
+					'post_status'            => 'publish',
+					'fields'                 => 'ids',
+					'no_found_rows'          => true,
+					'update_post_meta_cache' => false,
+					'update_post_term_cache' => false,
+					'meta_query'             => array(
+						'relation' => 'OR',
+						array(
+							'key'     => '_group_id',
+							'value'   => '',
+							'compare' => '!=',
+							'type'    => 'CHAR',
+						),
+						array(
+							'key'     => '_batch_id',
+							'value'   => '',
+							'compare' => '!=',
+							'type'    => 'CHAR',
+						),
+					),
+				)
+			);
+
+			$merged = array_merge( $magicpages, $static_ids );
 		}
 
-		// Export-to-static writes _group_id and _batch_id; _location_id alone may exist from the admin
-		// "Location & Group" metabox without an export (see wp-whiterail-seo export-to-static.php meta_input).
-		$static = get_posts(
-			array(
-				'post_type'              => array( 'page', 'post' ),
-				'posts_per_page'         => -1,
-				'post_status'            => 'publish',
-				'fields'                 => 'ids',
-				'no_found_rows'          => true,
-				'update_post_meta_cache' => false,
-				'update_post_term_cache' => false,
-				'meta_query'             => array(
-					'relation' => 'OR',
-					array(
-						'key'     => '_group_id',
-						'value'   => '',
-						'compare' => '!=',
-						'type'    => 'CHAR',
-					),
-					array(
-						'key'     => '_batch_id',
-						'value'   => '',
-						'compare' => '!=',
-						'type'    => 'CHAR',
-					),
-				),
-			)
-		);
+		$merged = array_values( array_unique( array_map( 'intval', $merged ) ) );
 
-		return array_values( array_unique( array_merge( $magicpages, $static ) ) );
+		/**
+		 * Extend which post IDs are included in analytics (e.g. LocaleForge `lf_landing`).
+		 *
+		 * @param int[] $merged     Combined IDs (magicpage ± static export pages).
+		 * @param int[] $magicpages Magic Page CPT IDs.
+		 * @param int[] $static_ids Static page IDs when static analytics is enabled (else empty).
+		 * @since 1.2.4 Filter: `magic_page_essentials_analytics_tracked_post_ids` (formerly `mpe_analytics_tracked_post_ids`).
+		 */
+		return array_values( array_unique( array_map( 'intval', (array) apply_filters( 'magic_page_essentials_analytics_tracked_post_ids', $merged, $magicpages, $static_ids ) ) ) );
 	}
 
 	/**
@@ -140,8 +153,9 @@ class MagicPage_Analytics_Dashboard {
 		 *
 		 * @param bool $out     Default decision from export meta (_group_id / _batch_id).
 		 * @param int  $post_id Post ID.
+		 * @since 1.2.4 Filter: `magic_page_essentials_analytics_track_static_page` (formerly `mpe_analytics_track_static_page`).
 		 */
-		return (bool) apply_filters( 'mpe_analytics_track_static_page', $out, $post_id );
+		return (bool) apply_filters( 'magic_page_essentials_analytics_track_static_page', $out, $post_id );
 	}
 
 	/**
@@ -155,18 +169,25 @@ class MagicPage_Analytics_Dashboard {
 		if ( $post_id <= 0 ) {
 			return false;
 		}
-		$pt = get_post_type( $post_id );
+		$pt      = get_post_type( $post_id );
+		$tracked = false;
 		if ( 'magicpage' === $pt ) {
-			return true;
-		}
-		if ( ! in_array( $pt, array( 'page', 'post' ), true ) ) {
-			return false;
-		}
-		if ( ! class_exists( 'Magic_Page_Essentials_Settings', false ) || ! Magic_Page_Essentials_Settings::is_feature_enabled( 'analytics_include_static_pages' ) ) {
-			return false;
+			$tracked = true;
+		} elseif ( in_array( $pt, array( 'page', 'post' ), true )
+			&& class_exists( 'Magic_Page_Essentials_Settings', false )
+			&& Magic_Page_Essentials_Settings::is_feature_enabled( 'analytics_include_static_pages' ) ) {
+			$tracked = self::is_static_page_from_magic_export( $post_id );
 		}
 
-		return self::is_static_page_from_magic_export( $post_id );
+		/**
+		 * Whether this post may record visits/clicks (extend for other CPTs).
+		 *
+		 * @param bool   $tracked Default from Magic Page / static export rules.
+		 * @param int    $post_id Post ID.
+		 * @param string $pt      Post type slug.
+		 * @since 1.2.4 Filter: `magic_page_essentials_analytics_is_post_tracked` (formerly `mpe_analytics_is_post_tracked`).
+		 */
+		return (bool) apply_filters( 'magic_page_essentials_analytics_is_post_tracked', $tracked, $post_id, $pt );
 	}
 
 	/**
@@ -196,12 +217,50 @@ class MagicPage_Analytics_Dashboard {
 					'region' => is_string( $region ) ? $region : '—',
 				);
 			}
+
+			// LocaleForge and other stacks may bucket by `lf_place` term ID (`_lf_place_id`).
+			if ( taxonomy_exists( 'lf_place' ) ) {
+				$term = get_term( $tid, 'lf_place' );
+				if ( $term && ! is_wp_error( $term ) ) {
+					$region = get_term_meta( $term->term_id, 'lf_region', true );
+					if ( '' === $region || false === $region ) {
+						$region = '—';
+					}
+					return array(
+						'label'  => $term->name,
+						'region' => is_string( $region ) ? $region : '—',
+					);
+				}
+			}
 		}
 
 		return array(
 			'label'  => (string) $location_key,
 			'region' => '—',
 		);
+	}
+
+	/**
+	 * Location bucket for analytics: Magic Page `_location_id`, then LocaleForge `_lf_place_id`.
+	 *
+	 * @param int $post_id Post ID.
+	 * @return string Term ID string or '_unassigned'.
+	 */
+	private static function get_location_bucket_key_for_post( $post_id ) {
+		$post_id = (int) $post_id;
+		if ( $post_id <= 0 ) {
+			return '_unassigned';
+		}
+		$location_id = get_post_meta( $post_id, '_location_id', true );
+		if ( $location_id !== '' && false !== $location_id && null !== $location_id ) {
+			return (string) $location_id;
+		}
+		$place_id = get_post_meta( $post_id, '_lf_place_id', true );
+		if ( $place_id !== '' && false !== $place_id && null !== $place_id ) {
+			return (string) $place_id;
+		}
+
+		return '_unassigned';
 	}
 
 	/**
@@ -223,13 +282,21 @@ class MagicPage_Analytics_Dashboard {
 	 * @return void
 	 */
 	public function enqueue_assets( $hook ) {
-		if ( 'magicpage_page_magicpage-analytics-dashboard' !== $hook ) {
+		$allowed_hooks = array( 'magicpage_page_magicpage-analytics-dashboard' );
+		/**
+		 * Admin screen hook suffixes where analytics assets load (e.g. LocaleForge mirror page).
+		 *
+		 * @param string[] $allowed_hooks Hook suffixes from `add_submenu_page`.
+		 * @since 1.2.4 Filter: `magic_page_essentials_analytics_dashboard_hook_suffixes` (formerly `mpe_analytics_dashboard_hook_suffixes`).
+		 */
+		$allowed_hooks = apply_filters( 'magic_page_essentials_analytics_dashboard_hook_suffixes', $allowed_hooks );
+		if ( ! in_array( $hook, $allowed_hooks, true ) ) {
 			return;
 		}
 
 		wp_enqueue_script(
 			'chartjs',
-			'https://cdn.jsdelivr.net/npm/chart.js',
+			MAGIC_PAGE_ESSENTIALS_URL . 'assets/js/vendor/chart.umd.min.js',
 			array(),
 			'4.4.0',
 			true
@@ -252,6 +319,11 @@ class MagicPage_Analytics_Dashboard {
 			defined( 'MAGIC_PAGE_ESSENTIALS_VERSION' ) ? MAGIC_PAGE_ESSENTIALS_VERSION : '1.0.0'
 		);
 
+		/* translators: 1: current page number, 2: total pages */
+		$i18n_page_of = __( 'Page %1$s of %2$s', 'magic-page-essentials' );
+		/* translators: %1$s: number of pages cleared */
+		$i18n_clear_done = __( 'Cleared stats for %1$s page(s). Reloading…', 'magic-page-essentials' );
+
 		wp_localize_script(
 			'magicpage-analytics-js',
 			'magicpageAnalytics',
@@ -260,11 +332,11 @@ class MagicPage_Analytics_Dashboard {
 				'nonce'            => wp_create_nonce( 'magicpage_analytics_nonce' ),
 				'per_page'         => 25,
 				'i18n'             => array(
-					'page_of' => __( 'Page %1$s of %2$s', 'magic-page-essentials' ),
-					'prev'    => __( '« Previous', 'magic-page-essentials' ),
-					'next'    => __( 'Next »', 'magic-page-essentials' ),
+					'page_of'                  => $i18n_page_of,
+					'prev'                     => __( '« Previous', 'magic-page-essentials' ),
+					'next'                     => __( 'Next »', 'magic-page-essentials' ),
 					'clear_unassigned_confirm' => __( 'Clear all visit and click history for tracked pages that have no location assigned? This cannot be undone.', 'magic-page-essentials' ),
-					'clear_unassigned_done'    => __( 'Cleared stats for %1$s page(s). Reloading…', 'magic-page-essentials' ),
+					'clear_unassigned_done'    => $i18n_clear_done,
 				),
 			)
 		);
@@ -407,6 +479,7 @@ class MagicPage_Analytics_Dashboard {
 		$title = $source;
 		if ( $post ) {
 			// Runs Magic Page the_title processing for [location], [meta_*], spintax, etc. when brackets/spintax present.
+			// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Core WordPress filter.
 			$title = apply_filters( 'the_title', $title, $post_id );
 		}
 
@@ -440,8 +513,9 @@ class MagicPage_Analytics_Dashboard {
 		 *
 		 * @param string $title   Display title.
 		 * @param int    $post_id Post ID.
+		 * @since 1.2.4 Filter: `magic_page_essentials_analytics_display_title` (formerly `mpe_analytics_display_title`).
 		 */
-		return apply_filters( 'mpe_analytics_display_title', $title, $post_id );
+		return apply_filters( 'magic_page_essentials_analytics_display_title', $title, $post_id );
 	}
 
 	/**
@@ -488,12 +562,7 @@ class MagicPage_Analytics_Dashboard {
 				}
 			}
 
-			$location_id = get_post_meta( $post_id, '_location_id', true );
-			if ( $location_id === '' || false === $location_id || null === $location_id ) {
-				$location_key = '_unassigned';
-			} else {
-				$location_key = (string) $location_id;
-			}
+			$location_key = self::get_location_bucket_key_for_post( $post_id );
 
 			if ( ! isset( $locations[ $location_key ] ) ) {
 				$disp                       = self::resolve_location_display( $location_key );
@@ -582,8 +651,7 @@ class MagicPage_Analytics_Dashboard {
 				continue;
 			}
 
-			$location_id = get_post_meta( $post_id, '_location_id', true );
-			if ( $location_id !== '' && false !== $location_id && null !== $location_id ) {
+			if ( '_unassigned' !== self::get_location_bucket_key_for_post( $post_id ) ) {
 				continue;
 			}
 
@@ -592,8 +660,9 @@ class MagicPage_Analytics_Dashboard {
 			 *
 			 * @param bool $skip    Default false.
 			 * @param int  $post_id Post ID.
+			 * @since 1.2.4 Filter: `magic_page_essentials_skip_clear_unassigned_analytics` (formerly `mpe_skip_clear_unassigned_analytics`).
 			 */
-			if ( apply_filters( 'mpe_skip_clear_unassigned_analytics', false, $post_id ) ) {
+			if ( apply_filters( 'magic_page_essentials_skip_clear_unassigned_analytics', false, $post_id ) ) {
 				continue;
 			}
 

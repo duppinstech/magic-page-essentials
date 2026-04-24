@@ -32,9 +32,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @param WP_Post $post Post object.
  * @return bool
  */
-function mpe_is_magic_page_context( $post ) {
+function magic_page_essentials_is_magic_page_context( $post ) {
 	if ( ! $post instanceof WP_Post ) {
-		return (bool) apply_filters( 'mpe_is_magic_page_context', false, $post );
+		return (bool) apply_filters( 'magic_page_essentials_is_magic_page_context', false, $post );
 	}
 
 	$slug   = function_exists( 'magic_page_default_post_slug' ) ? magic_page_default_post_slug() : 'magicpage';
@@ -45,7 +45,7 @@ function mpe_is_magic_page_context( $post ) {
 	} elseif ( in_array( $post->post_type, array( 'page', 'post' ), true ) ) {
 		$lid = get_post_meta( $post->ID, '_location_id', true );
 		if ( $lid !== '' && $lid !== false && $lid !== null ) {
-			$result = (bool) apply_filters( 'mpe_location_id_indicates_magic_context', true, $post, $lid );
+			$result = (bool) apply_filters( 'magic_page_essentials_location_id_indicates_magic_context', true, $post, $lid );
 		}
 		if ( ! $result ) {
 			$gid = get_post_meta( $post->ID, '_group_id', true );
@@ -55,21 +55,22 @@ function mpe_is_magic_page_context( $post ) {
 		}
 	}
 
-	return (bool) apply_filters( 'mpe_is_magic_page_context', $result, $post );
+	return (bool) apply_filters( 'magic_page_essentials_is_magic_page_context', $result, $post );
 }
 
 /**
  * @return void
  */
-function mpe_log_performance_scope_class_mismatch() {
+function magic_page_essentials_log_performance_scope_class_mismatch() {
 	if ( ! defined( 'WP_DEBUG' ) || ! WP_DEBUG ) {
 		return;
 	}
-	if ( get_option( 'mpe_logged_missing_mp_classes', false ) ) {
+	if ( get_option( 'magic_page_essentials_logged_missing_mp_classes', false ) ) {
 		return;
 	}
-	update_option( 'mpe_logged_missing_mp_classes', true, false );
-	error_log( 'Magic Page Essentials: MagicPageShortcodesAndFilters or MagicPagePublic not found; performance scope skipped. If Magic Page updated, verify class names.' ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+	update_option( 'magic_page_essentials_logged_missing_mp_classes', true, false );
+	// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- WP_DEBUG-only diagnostic.
+	error_log( 'Magic Page Essentials: MagicPageShortcodesAndFilters or MagicPagePublic not found; performance scope skipped. If Magic Page updated, verify class names.' );
 }
 
 /**
@@ -77,20 +78,23 @@ function mpe_log_performance_scope_class_mismatch() {
  *
  * @return bool
  */
-function mpe_performance_scope_skip_for_builder() {
-	if ( isset( $_GET['elementor-preview'] ) || isset( $_GET['elementor-preview-id'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+function magic_page_essentials_performance_scope_skip_for_builder() {
+	// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Builder preview query flags, not form submissions.
+	if ( isset( $_GET['elementor-preview'] ) || isset( $_GET['elementor-preview-id'] ) ) {
 		return true;
 	}
-	if ( isset( $_GET['vc_action'] ) && 'vc_inline' === $_GET['vc_action'] ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	if ( isset( $_GET['vc_action'] ) && 'vc_inline' === $_GET['vc_action'] ) {
 		return true;
 	}
-	if ( ! empty( $_GET['fl_builder'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	if ( ! empty( $_GET['fl_builder'] ) ) {
 		return true;
 	}
-	if ( isset( $_GET['preview'] ) && isset( $_GET['preview_id'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	if ( isset( $_GET['preview'] ) && isset( $_GET['preview_id'] ) ) {
 		return true;
 	}
-	return (bool) apply_filters( 'mpe_performance_scope_skip_for_builder', false );
+	// phpcs:enable WordPress.Security.NonceVerification.Recommended
+
+	return (bool) apply_filters( 'magic_page_essentials_performance_scope_skip_for_builder', false );
 }
 
 /**
@@ -98,10 +102,10 @@ function mpe_performance_scope_skip_for_builder() {
  *
  * @return int Number of callbacks removed.
  */
-function mpe_remove_magic_page_vendor_callbacks() {
+function magic_page_essentials_remove_magic_page_vendor_callbacks() {
 	global $wp_filter;
 
-	$targets  = array( 'MagicPageShortcodesAndFilters', 'MagicPagePublic' );
+	$targets   = array( 'MagicPageShortcodesAndFilters', 'MagicPagePublic' );
 	$to_remove = array();
 
 	foreach ( $wp_filter as $tag => $hook ) {
@@ -118,7 +122,6 @@ function mpe_remove_magic_page_vendor_callbacks() {
 				if ( ! in_array( $cls, $targets, true ) ) {
 					continue;
 				}
-				// Admin save handler — leave registered (harmless on front; avoids odd edge cases).
 				if ( 'save_post' === $tag && 'MagicPageShortcodesAndFilters' === $cls ) {
 					continue;
 				}
@@ -130,7 +133,7 @@ function mpe_remove_magic_page_vendor_callbacks() {
 	$removed = 0;
 	foreach ( $to_remove as $row ) {
 		if ( remove_filter( $row[0], $row[1], $row[2] ) ) {
-			$removed++;
+			++$removed;
 		}
 	}
 
@@ -140,7 +143,7 @@ function mpe_remove_magic_page_vendor_callbacks() {
 /**
  * @return void
  */
-function mpe_maybe_strip_magic_page_hooks() {
+function magic_page_essentials_maybe_strip_magic_page_hooks() {
 	if ( ! class_exists( 'Magic_Page_Essentials_Settings', false ) || ! Magic_Page_Essentials_Settings::is_feature_enabled( 'performance_scope' ) ) {
 		return;
 	}
@@ -154,11 +157,11 @@ function mpe_maybe_strip_magic_page_hooks() {
 	}
 
 	if ( ! class_exists( 'MagicPageShortcodesAndFilters', false ) && ! class_exists( 'MagicPagePublic', false ) ) {
-		mpe_log_performance_scope_class_mismatch();
+		magic_page_essentials_log_performance_scope_class_mismatch();
 		return;
 	}
 
-	if ( mpe_performance_scope_skip_for_builder() ) {
+	if ( magic_page_essentials_performance_scope_skip_for_builder() ) {
 		return;
 	}
 
@@ -171,11 +174,11 @@ function mpe_maybe_strip_magic_page_hooks() {
 		return;
 	}
 
-	if ( mpe_is_magic_page_context( $post ) ) {
+	if ( magic_page_essentials_is_magic_page_context( $post ) ) {
 		return;
 	}
 
-	mpe_remove_magic_page_vendor_callbacks();
+	magic_page_essentials_remove_magic_page_vendor_callbacks();
 }
 
-add_action( 'wp', 'mpe_maybe_strip_magic_page_hooks', 0 );
+add_action( 'wp', 'magic_page_essentials_maybe_strip_magic_page_hooks', 0 );
