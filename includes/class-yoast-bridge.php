@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-class MPE_Yoast_Bridge {
+class Magic_Page_Essentials_Yoast_Bridge {
 
 	public static function init() {
 		add_action( 'wpseo_register_extra_replacements', [ __CLASS__, 'register_replacements' ] );
@@ -354,6 +354,10 @@ class MPE_Yoast_Bridge {
 	}
 }
 
+if ( class_exists( 'Magic_Page_Essentials_Yoast_Bridge', false ) && ! class_exists( 'MPE_Yoast_Bridge', false ) ) {
+	class_alias( 'Magic_Page_Essentials_Yoast_Bridge', 'MPE_Yoast_Bridge' );
+}
+
 /**
  * Back-compat entry point for the Yoast bridge location resolver.
  *
@@ -361,5 +365,5 @@ class MPE_Yoast_Bridge {
  * @return WP_Term|null
  */
 function magic_page_essentials_yoast_bridge_get_location_term( $yoast_args = null ) {
-	return MPE_Yoast_Bridge::get_location_term( $yoast_args );
+	return Magic_Page_Essentials_Yoast_Bridge::get_location_term( $yoast_args );
 }

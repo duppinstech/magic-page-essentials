@@ -2,9 +2,9 @@
 Contributors: duppinstech
 Tags: magic-page, admin, analytics, pages
 Requires at least: 5.8
-Tested up to: 6.8
+Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 1.2.4
+Stable tag: 1.2.5
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -30,10 +30,17 @@ No. Magic Page (or compatible stack) should remain installed; this plugin adds a
 
 == Upgrade Notice ==
 
+= 1.2.5 =
+Developer filters use the `magic_page_essentials_*` prefix (see 1.2.4 notes). The Yoast bridge class is `Magic_Page_Essentials_Yoast_Bridge`; `MPE_Yoast_Bridge` remains available as a class alias.
+
 = 1.2.4 =
 Developer filters were renamed to use the `magic_page_essentials_*` prefix (for example `magic_page_essentials_analytics_tracked_post_ids` instead of `mpe_analytics_tracked_post_ids`). Update any custom code that hooked the old names.
 
 == Changelog ==
+
+= 1.2.5 =
+* Sync `readme.txt` (Tested up to, Stable tag) with plugin version; Yoast bridge class renamed to `Magic_Page_Essentials_Yoast_Bridge` with `MPE_Yoast_Bridge` alias.
+* Fix PHPCS PreparedSQL usage in Magic Pages list table query.
 
 = 1.2.4 =
 * WordPress Plugin Check compatibility (prefixes, i18n, escaping, local Chart.js bundle).

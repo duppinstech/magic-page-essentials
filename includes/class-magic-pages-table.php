@@ -168,20 +168,21 @@ class Magic_Pages_List_Table extends WP_List_Table {
 			AND p.post_status IN ('publish','draft','pending')"
 		);
 
-		$sql = $wpdb->prepare(
-			"SELECT p.ID, p.post_title AS title, p.post_author AS author, p.post_date AS date
-			FROM {$wpdb->posts} p
-			INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
-			WHERE p.post_type = 'page'
-			AND pm.meta_key = '_location_id'
-			AND p.post_status IN ('publish','draft','pending')
-			ORDER BY {$orderby} {$order}
-			LIMIT %d OFFSET %d",
-			$per_page,
-			$offset
+		$results = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT p.ID, p.post_title AS title, p.post_author AS author, p.post_date AS date
+				FROM {$wpdb->posts} p
+				INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
+				WHERE p.post_type = 'page'
+				AND pm.meta_key = '_location_id'
+				AND p.post_status IN ('publish','draft','pending')
+				ORDER BY {$orderby} {$order}
+				LIMIT %d OFFSET %d",
+				$per_page,
+				$offset
+			),
+			OBJECT
 		);
-
-		$results = $wpdb->get_results( $sql, OBJECT );
 		// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter
 
 		$this->items = is_array( $results ) ? $results : array();

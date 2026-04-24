@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'MAGIC_PAGE_ESSENTIALS_VERSION', '1.2.4' );
+define( 'MAGIC_PAGE_ESSENTIALS_VERSION', '1.2.5' );
 define( 'MAGIC_PAGE_ESSENTIALS_FILE', __FILE__ );
 define( 'MAGIC_PAGE_ESSENTIALS_PATH', plugin_dir_path( __FILE__ ) );
 define( 'MAGIC_PAGE_ESSENTIALS_URL', plugin_dir_url( __FILE__ ) );
@@ -53,7 +53,7 @@ add_action(
 		MagicPage_Analytics_Dashboard::maybe_boot();
 
 		if ( Magic_Page_Essentials_Settings::is_feature_enabled( 'yoast_bridge' ) && Magic_Page_Essentials_Settings::yoast_is_installed() ) {
-			MPE_Yoast_Bridge::init();
+			Magic_Page_Essentials_Yoast_Bridge::init();
 		}
 	},
 	5

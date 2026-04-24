@@ -483,14 +483,14 @@ class MagicPage_Analytics_Dashboard {
 			$title = apply_filters( 'the_title', $title, $post_id );
 		}
 
-		$term = class_exists( 'MPE_Yoast_Bridge', false )
-			? MPE_Yoast_Bridge::get_location_term_for_post( $post_id )
+		$term = class_exists( 'Magic_Page_Essentials_Yoast_Bridge', false )
+			? Magic_Page_Essentials_Yoast_Bridge::get_location_term_for_post( $post_id )
 			: null;
 
-		if ( class_exists( 'MPE_Yoast_Bridge', false ) ) {
-			$title = MPE_Yoast_Bridge::replace_mpp_tokens_in_string( $title, $term );
+		if ( class_exists( 'Magic_Page_Essentials_Yoast_Bridge', false ) ) {
+			$title = Magic_Page_Essentials_Yoast_Bridge::replace_mpp_tokens_in_string( $title, $term );
 			// Remaining Yoast %%variables%% (sep, title, cf_*, ct_*, etc.); mpp_* already expanded above.
-			$title = MPE_Yoast_Bridge::replace_yoast_variables_in_string( $title, $post_id );
+			$title = Magic_Page_Essentials_Yoast_Bridge::replace_yoast_variables_in_string( $title, $post_id );
 		}
 
 		$post = $previous_post;
