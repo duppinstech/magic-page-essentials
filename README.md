@@ -100,3 +100,33 @@ Companion plugin for sites using Magic Page Plugin. Redistribution without permi
 ## Support
 
 Open an issue on this repository or contact [Duppins Technology](https://duppinstech.com).
+
+---
+
+## Local development
+
+- PHP 7.4 or newer, Composer, and WordPress 5.8 or newer.
+- The parent Magic Page plugin must be installed and active.
+- Production dependencies are already bundled in `vendor/`. Refresh them with `composer install --no-dev`.
+- Copy this directory to `/wp-content/plugins/magic-page-essentials/` and activate it under Plugins.
+- There is no build step.
+
+## Tests
+
+PHPUnit is a dev dependency and is not part of the bundled `vendor/` directory.
+
+```bash
+composer install
+composer lint
+composer test
+```
+
+`composer lint` syntax-checks this plugin's PHP and skips `vendor/`. `composer test` runs PHPUnit. The committed suite only checks that the harness runs.
+
+## Release and deploy
+
+There is no compile step. The plugin directory, including the bundled production `vendor/`, is what gets installed.
+
+1. Bump the plugin version and the Stable tag in `readme.txt` together.
+2. Tag `vX.Y.Z` and publish a GitHub release. The plugin can install updates from those releases.
+3. Deploy by placing that release in `wp-content/plugins` and activating it.
