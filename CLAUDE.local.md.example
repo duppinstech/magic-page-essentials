@@ -1,0 +1,5 @@
+# Local Claude notes
+
+This file is an example. Copy it to `CLAUDE.local.md` for machine-specific notes.
+
+`CLAUDE.local.md` is gitignored. Do not put secrets in it.
