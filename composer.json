@@ -6,7 +6,14 @@
         "php": ">=7.4",
         "yahnis-elsts/plugin-update-checker": "5"
     },
+    "require-dev": {
+        "phpunit/phpunit": "^9.6"
+    },
     "config": {
         "sort-packages": true
+    },
+    "scripts": {
+        "lint": "@php scripts/lint.php",
+        "test": "@php vendor/bin/phpunit -c phpunit.xml.dist"
     }
 }
