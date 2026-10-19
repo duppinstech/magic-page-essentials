@@ -1,6 +1,6 @@
 # OWNERSHIP.md
 
-Ownership notice for this repository. Portable notice. The same file goes in every repo Odell Duppins works on.
+Ownership notice for this repository. Portable notice. The same file goes in every repo Odell Duppins Jr works on.
 
 ## Author and owner
 
