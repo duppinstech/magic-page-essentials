@@ -12,3 +12,14 @@ CLAUDE.local.md
 .claude/worktrees/
 .phpunit.result.cache
 .phpunit.cache/
+
+# --- Duppins Technology scaffold ---
+.env
+.env.*
+/*.zip
+.claude/scheduled_tasks.lock
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
