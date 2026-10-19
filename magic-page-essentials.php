@@ -26,6 +26,7 @@ define( 'MAGIC_PAGE_ESSENTIALS_PATH', plugin_dir_path( __FILE__ ) );
 define( 'MAGIC_PAGE_ESSENTIALS_URL', plugin_dir_url( __FILE__ ) );
 
 require_once MAGIC_PAGE_ESSENTIALS_PATH . 'includes/class-magic-page-essentials-github-updater.php';
+require_once MAGIC_PAGE_ESSENTIALS_PATH . 'includes/class-magic-page-essentials-plugin-info.php';
 require_once MAGIC_PAGE_ESSENTIALS_PATH . 'includes/class-essentials-settings.php';
 require_once MAGIC_PAGE_ESSENTIALS_PATH . 'includes/performance-scope.php';
 require_once MAGIC_PAGE_ESSENTIALS_PATH . 'includes/class-admin-dashboard.php';
@@ -41,6 +42,16 @@ Magic_Page_Essentials_GitHub_Updater::boot(
 		'owner'   => 'duppinstech',
 		'repo'    => 'magic-page-essentials',
 		'prefix'  => 'magic_page_essentials',
+	)
+);
+
+// Plugins screen links and the View details modal. No public help guide is published.
+Magic_Page_Essentials_Plugin_Info::boot(
+	array(
+		'file'         => MAGIC_PAGE_ESSENTIALS_FILE,
+		'settings_url' => 'edit.php?post_type=magicpage&page=magic-page-essentials',
+		'help_url'     => '',
+		'support_url'  => 'mailto:support@duppinstech.com',
 	)
 );
 
