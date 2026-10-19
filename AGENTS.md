@@ -1,14 +1,8 @@
 # Agents
 
-Magic Page Essentials is a WordPress plugin (PHP >= 7.4). Composer manages dependencies. Production packages are bundled in `vendor/` for site installs. There is no build step.
+Magic Page Essentials is a WordPress plugin (PHP >= 7.4). Composer manages development dependencies. There is no production Composer package and no build step.
 
 ## Commands
-
-Refresh the bundled production dependencies:
-
-```
-composer install --no-dev
-```
 
 Install dev dependencies (PHPUnit) before lint or test:
 
@@ -30,13 +24,13 @@ composer test
 
 Build: none.
 
-Check `composer.json` (warnings do not fail the command; `composer validate --strict` already fails on the pinned `yahnis-elsts/plugin-update-checker` constraint):
+Check `composer.json` (warnings do not fail the command):
 
 ```
 composer validate
 ```
 
-`composer install` changes `vendor/`. Do not commit dev packages. `composer install --no-dev` restores production packages. Leave `vendor/` unstaged unless a production dependency changed.
+`composer install` changes `vendor/`. Do not commit dev packages. `composer install --no-dev` leaves no production packages. Leave `vendor/` unstaged unless a production dependency changed.
 
 ## Conventions
 

@@ -1,15 +1,17 @@
 <?php
 /**
  * Plugin Name: Magic Page Essentials
- * Plugin URI: https://duppinstech.com/magicpage-essentials
- * Description: Admin UI enhancements for the Magic Page Plugin. Adds an admin table for Magic Pages, streamlines page management, optional Yoast SEO bridge, and feature toggles.
+ * Plugin URI: https://github.com/duppinstech/magic-page-essentials
+ * Description: Add-on for the third-party Magic Page plugin: filtered Pages list, feature toggles, optional Yoast SEO bridge, and analytics.
  * Version: 1.3.0
+ * Requires at least: 5.8
+ * Requires PHP: 7.4
  * Author: Duppins Technology
  * Author URI: https://duppinstech.com
- * Update URI: https://github.com/oduppinsjr/wp-magic-page-essentials
  * License: GPL-2.0-or-later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: magic-page-essentials
+ * Update URI: https://github.com/duppinstech/magic-page-essentials
  *
  * @package Magic_Page_Essentials
  */
@@ -23,12 +25,24 @@ define( 'MAGIC_PAGE_ESSENTIALS_FILE', __FILE__ );
 define( 'MAGIC_PAGE_ESSENTIALS_PATH', plugin_dir_path( __FILE__ ) );
 define( 'MAGIC_PAGE_ESSENTIALS_URL', plugin_dir_url( __FILE__ ) );
 
-require_once MAGIC_PAGE_ESSENTIALS_PATH . 'includes/class-github-updater.php';
+require_once MAGIC_PAGE_ESSENTIALS_PATH . 'includes/class-magic-page-essentials-github-updater.php';
 require_once MAGIC_PAGE_ESSENTIALS_PATH . 'includes/class-essentials-settings.php';
 require_once MAGIC_PAGE_ESSENTIALS_PATH . 'includes/performance-scope.php';
 require_once MAGIC_PAGE_ESSENTIALS_PATH . 'includes/class-admin-dashboard.php';
 require_once MAGIC_PAGE_ESSENTIALS_PATH . 'includes/class-yoast-bridge.php';
 require_once MAGIC_PAGE_ESSENTIALS_PATH . 'includes/admin-functions.php';
+
+// Updates from GitHub Releases. Booted at load so WP-Cron and background auto-updates see releases.
+// Disable with define( 'MAGIC_PAGE_ESSENTIALS_DISABLE_GITHUB_UPDATER', true ).
+Magic_Page_Essentials_GitHub_Updater::boot(
+	array(
+		'file'    => MAGIC_PAGE_ESSENTIALS_FILE,
+		'version' => MAGIC_PAGE_ESSENTIALS_VERSION,
+		'owner'   => 'duppinstech',
+		'repo'    => 'magic-page-essentials',
+		'prefix'  => 'magic_page_essentials',
+	)
+);
 
 register_activation_hook(
 	__FILE__,
@@ -45,8 +59,6 @@ add_action(
 		// Hosted outside WordPress.org: load /languages from the plugin directory.
 		// phpcs:ignore PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound -- Non–WordPress.org distribution.
 		load_plugin_textdomain( 'magic-page-essentials', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
-
-		Magic_Page_Essentials_GitHub_Updater::init();
 
 		Magic_Page_Essentials_Settings::init();
 

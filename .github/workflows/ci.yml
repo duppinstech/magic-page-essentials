@@ -28,3 +28,9 @@ jobs:
 
       - name: Test
         run: composer test
+
+      - name: Release notes for the current version
+        run: |
+          set -euo pipefail
+          version=$(sed -n 's/^ \* Version:[[:space:]]*//p' magic-page-essentials.php | tr -d '\r')
+          bash bin/release-notes.sh "$version" magic-page-essentials.php "$RUNNER_TEMP/release-notes.md"
