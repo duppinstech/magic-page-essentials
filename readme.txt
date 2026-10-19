@@ -55,6 +55,12 @@ No. Magic Page is a third-party plugin. Duppins Technology does not make it, and
 
 Open Magic Pages → Essentials. The link is shown to users who can manage options.
 
+== Screenshots ==
+
+1. Pages list with All, Magic Pages, and Non-Magic Pages, plus the location filter.
+2. Essentials settings. The Yoast toggle stays off until Yoast SEO is active.
+3. Analytics dashboard with a date range, CSV and JSON export, and location charts.
+
 == Changelog ==
 
 = 1.3.0 =
