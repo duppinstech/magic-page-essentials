@@ -3,7 +3,7 @@
  * Plugin Name: Magic Page Essentials
  * Plugin URI: https://duppinstech.com/magicpage-essentials
  * Description: Admin UI enhancements for the Magic Page Plugin. Adds an admin table for Magic Pages, streamlines page management, optional Yoast SEO bridge, and feature toggles.
- * Version: 1.2.5
+ * Version: 1.3.0
  * Author: Duppins Technology
  * Author URI: https://duppinstech.com
  * Update URI: https://github.com/oduppinsjr/wp-magic-page-essentials
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'MAGIC_PAGE_ESSENTIALS_VERSION', '1.2.5' );
+define( 'MAGIC_PAGE_ESSENTIALS_VERSION', '1.3.0' );
 define( 'MAGIC_PAGE_ESSENTIALS_FILE', __FILE__ );
 define( 'MAGIC_PAGE_ESSENTIALS_PATH', plugin_dir_path( __FILE__ ) );
 define( 'MAGIC_PAGE_ESSENTIALS_URL', plugin_dir_url( __FILE__ ) );

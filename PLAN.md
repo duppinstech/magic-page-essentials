@@ -1,11 +1,11 @@
 # Plan
 
-Current product work is the roadmap in README.md:
+The README roadmap shipped in 1.3.0:
 
-- Filter the Pages list by Magic Page location.
-- Per-page analytics modal from the Magic Pages list.
-- Real 404 and device logging from frontend tracking.
-- Export analytics (CSV and JSON).
+- Pages list filters by Magic Page location.
+- Per-page analytics modal on the Magic Pages list.
+- 404 and device logging from frontend tracking.
+- Analytics export (CSV and JSON).
 - Configurable date ranges.
 
-No delivery dates are recorded in this repo. Shipped notes live in CHANGELOG.md and `readme.txt`.
+No further product work is queued. Shipped notes live in CHANGELOG.md and `readme.txt`.

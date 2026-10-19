@@ -212,4 +212,141 @@ body.admin-color-modern .mpe-card { border-color: #e2e8f0; }
   .mpe-stat-value {
     font-size: 1.5rem;
   }
+
+  .mpe-modal-dialog {
+    margin: 1rem;
+    max-height: calc(100vh - 2rem);
+  }
+
+  .mpe-modal-stats {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Date range and export */
+.mpe-range-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  margin: 0 0 1.5rem;
+}
+
+.mpe-range-bar select,
+.mpe-range-bar input[type="date"] {
+  max-width: 100%;
+}
+
+.mpe-range-status {
+  flex: 1 1 160px;
+  margin: 0;
+  color: #64748b;
+  font-size: 0.8125rem;
+}
+
+/* Per-page analytics modal */
+.mpe-modal[hidden] {
+  display: none !important;
+}
+
+.mpe-modal {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 100000;
+}
+
+.mpe-modal-backdrop {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.mpe-modal-dialog {
+  position: relative;
+  max-width: 640px;
+  margin: 8vh auto;
+  background: #fff;
+  border-radius: 10px;
+  padding: 1.5rem 1.5rem 1.25rem;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+  max-height: 80vh;
+  overflow: auto;
+}
+
+.mpe-modal-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  border: 0;
+  background: transparent;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  color: #64748b;
+}
+
+.mpe-modal-dialog h2 {
+  margin: 0 2rem 0.35rem 0;
+  font-size: 1.25rem;
+}
+
+.mpe-modal-meta,
+.mpe-modal-note {
+  margin: 0 0 0.75rem;
+  color: #64748b;
+  font-size: 0.8125rem;
+}
+
+.mpe-modal-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.mpe-modal-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.mpe-modal-stat {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.75rem;
+  text-align: center;
+}
+
+.mpe-modal-devices {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: #334155;
+  font-size: 0.875rem;
+}
+
+.mpe-modal-heading {
+  margin: 0 0 0.5rem;
+  font-size: 0.9375rem;
+}
+
+.mpe-modal-clicks {
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
+.mpe-modal-clicks li {
+  margin: 0 0 0.35rem;
+}
+
+.mpe-click-when {
+  color: #64748b;
+  margin-right: 0.35rem;
 }

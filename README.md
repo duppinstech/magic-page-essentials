@@ -11,20 +11,26 @@ A companion plugin for WordPress that extends the [Magic Page Plugin](https://ma
   - **All** – every page
   - **Magic Pages** – only pages with `_location_id` (Magic Page–generated)
   - **Non-Magic Pages** – regular pages only  
-  Optional **Group** dropdown filters by `_group_id` (uses `_magic_page_groups` from the parent plugin).
+  Optional **Group** and **Location** dropdowns filter by `_group_id` and `_location_id`.
 
 - **Analytics dashboard**  
   Under **Magic Pages → Analytics**:
-  - Charts: visits over time, by group, by location, top 10 pages, 404s (placeholder), device type (placeholder).
-  - **Top 10 Magic Pages** table with **Visits**, **Clicks**, and **CTR %** (conversion rate).
+  - Date range: last 7, 30, or 90 days, last 12 months, all time, or a custom range (capped at 366 days).
+  - Charts: visits over time, top locations, device type, and 404s.
+  - Tables: locations, pages (visits, clicks, CTR %), and top 404 paths.
+  - **Export CSV** and **Export JSON** for the selected range.
 
-- **Visit & click tracking**  
-  On the front end, when someone views a `magicpage` post:
-  - A page view is recorded via AJAX (stored in `magicpage_visits` / `magicpage_visit_count`).
-  - Clicks on outbound links are recorded for CTR/conversion (stored in `magicpage_clicks` / `magicpage_click_count`).
+- **Per-page analytics**  
+  On the Magic Pages list (and on `magicpage` posts), the row action **Analytics** opens a modal with that page’s visits, clicks, CTR, devices, and recent clicks.
+
+- **Visit, click, device, and 404 tracking**  
+  On the front end, when someone views a tracked `magicpage` (or an included static export):
+  - A page view is recorded via AJAX, including device type (`desktop`, `mobile`, `tablet`).
+  - Clicks on outbound links are recorded for CTR.
+  - A missing URL records a 404 (path and device only; the same visitor and path are counted once per hour).
 
 - **Extensible**  
-  Structured so you can add more filters, metrics, or export later.
+  Developer filters use the `magic_page_essentials_*` prefix, including location choices and whether a 404 is stored.
 
 ---
 
@@ -36,8 +42,9 @@ magic-page-essentials/
 │   ├── css/
 │   │   └── magicpage-analytics.css
 │   └── js/
-│       ├── magicpage-analytics.js      (admin dashboard charts + table)
-│       └── magicpage-frontend-analytics.js  (visit + link click tracking)
+│       ├── magicpage-analytics.js           (dashboard charts, ranges, export)
+│       ├── magicpage-page-analytics.js      (per-page modal on the Pages list)
+│       └── magicpage-frontend-analytics.js  (visits, clicks, device, 404s)
 ├── includes/
 │   ├── admin-functions.php             (Pages list views + filters)
 │   ├── class-admin-dashboard.php       (Analytics menu, AJAX, enqueue)
@@ -58,9 +65,9 @@ magic-page-essentials/
 
 ## Usage
 
-- **Pages screen:** Use **Non-Magic Pages** (default), **Magic Pages**, or **All**. Use **Group** to narrow by Magic Page group.
-- **Analytics:** Open **Magic Pages → Analytics** to see visit trends, top pages, and CTR. Data is loaded via AJAX; the table shows visits, clicks, and CTR % per page.
-- Tracking is automatic on singular `magicpage` views: one request records the view, and link clicks on the page are sent to `magicpage_record_click`.
+- **Pages screen:** Use **Non-Magic Pages** (default), **Magic Pages**, or **All**. Use **Group** and **Location** to narrow the list. On a Magic Page row, **Analytics** opens that page’s stats.
+- **Analytics:** Open **Magic Pages → Analytics**, pick a date range, and export CSV or JSON. Charts and tables follow the range.
+- Tracking is automatic on singular tracked views (device is sent with the page view) and on front-end 404s.
 
 ---
 
@@ -80,11 +87,7 @@ This project is versioned on GitHub. To keep your repo and deployments in sync:
 
 ## Roadmap
 
-- Filter by Magic Page location in the Pages list.
-- Per-page analytics modal from the Magic Pages list.
-- Real 404 and device logging from frontend tracking.
-- Export analytics (CSV/JSON).
-- Configurable date ranges.
+The previous roadmap shipped in 1.3.0: location filter, per-page analytics, 404 and device logging, CSV/JSON export, and date ranges. No further product work is queued.
 
 ---
 

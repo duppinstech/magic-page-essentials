@@ -4,11 +4,11 @@ Tags: magic-page, admin, analytics, pages
 Requires at least: 5.8
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 1.2.5
+Stable tag: 1.3.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Admin UI and analytics companion for the Magic Page plugin: filtered Pages list, optional Yoast bridge, and visit/click analytics.
+Admin UI and analytics companion for the Magic Page plugin: filtered Pages list, optional Yoast bridge, and visit, click, device, and 404 analytics.
 
 == Description ==
 
@@ -30,6 +30,9 @@ No. Magic Page (or compatible stack) should remain installed; this plugin adds a
 
 == Upgrade Notice ==
 
+= 1.3.0 =
+Analytics adds a date range, CSV/JSON export, device and 404 charts, a location filter on Pages, and a per-page analytics modal. Older visit rows without a device count as Unknown.
+
 = 1.2.5 =
 Developer filters use the `magic_page_essentials_*` prefix (see 1.2.4 notes). The Yoast bridge class is `Magic_Page_Essentials_Yoast_Bridge`; `MPE_Yoast_Bridge` remains available as a class alias.
 
@@ -37,6 +40,13 @@ Developer filters use the `magic_page_essentials_*` prefix (see 1.2.4 notes). Th
 Developer filters were renamed to use the `magic_page_essentials_*` prefix (for example `magic_page_essentials_analytics_tracked_post_ids` instead of `mpe_analytics_tracked_post_ids`). Update any custom code that hooked the old names.
 
 == Changelog ==
+
+= 1.3.0 =
+* Filter the Pages list by Magic Page location.
+* Per-page analytics modal on the Magic Pages list.
+* Record device type on visits and 404s from the front end.
+* Export analytics as CSV or JSON.
+* Choose a date range (including a custom range) on the analytics dashboard.
 
 = 1.2.5 =
 * Sync `readme.txt` (Tested up to, Stable tag) with plugin version; Yoast bridge class renamed to `Magic_Page_Essentials_Yoast_Bridge` with `MPE_Yoast_Bridge` alias.

@@ -192,7 +192,8 @@ function magic_page_essentials_redirect_pages_to_non_magic_default() {
 
 	// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Admin list URL state only.
 	if ( 'edit.php' === $pagenow && isset( $_GET['post_type'] ) && 'page' === sanitize_key( wp_unslash( $_GET['post_type'] ) ) ) {
-		if ( ! isset( $_GET['magic_pages'] ) && ! isset( $_GET['s'] ) && ! isset( $_GET['post_status'] ) && ! isset( $_GET['paged'] ) ) {
+		$has_list_filter = isset( $_GET['s'] ) || isset( $_GET['post_status'] ) || isset( $_GET['paged'] ) || isset( $_GET['_group_id'] ) || isset( $_GET['_location_id'] );
+		if ( ! isset( $_GET['magic_pages'] ) && ! $has_list_filter ) {
 			wp_safe_redirect( admin_url( 'edit.php?post_type=page&magic_pages=0' ) );
 			exit;
 		}
@@ -275,5 +276,194 @@ add_action( 'pre_get_posts', 'magic_page_essentials_filter_pages_by_magic_page_g
  */
 function magic_page_essentials_bust_page_view_count_cache() {
 	wp_cache_delete( 'magic_page_essentials_page_view_counts', 'magic_page_essentials' );
+	wp_cache_delete( 'magic_page_essentials_location_choices', 'magic_page_essentials' );
 }
 add_action( 'save_post', 'magic_page_essentials_bust_page_view_count_cache' );
+
+/**
+ * Keep the Magic / Non-Magic view when the Pages filter form is submitted.
+ *
+ * @return void
+ */
+function magic_page_essentials_preserve_magic_pages_filter() {
+	global $typenow;
+	if ( 'page' !== $typenow ) {
+		return;
+	}
+
+	// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Admin list URL state only.
+	if ( ! isset( $_GET['magic_pages'] ) ) {
+		return;
+	}
+	$magic = sanitize_text_field( wp_unslash( $_GET['magic_pages'] ) );
+	// phpcs:enable WordPress.Security.NonceVerification.Recommended
+
+	if ( '0' !== $magic && '1' !== $magic ) {
+		return;
+	}
+
+	printf( '<input type="hidden" name="magic_pages" value="%s" />', esc_attr( $magic ) );
+}
+add_action( 'restrict_manage_posts', 'magic_page_essentials_preserve_magic_pages_filter' );
+
+/**
+ * Location names for the Pages list dropdown, keyed by `_location_id`.
+ *
+ * @return array<string,string>
+ */
+function magic_page_essentials_get_location_filter_choices() {
+	$cache_key = 'magic_page_essentials_location_choices';
+	$cached    = wp_cache_get( $cache_key, 'magic_page_essentials' );
+	if ( is_array( $cached ) ) {
+		$choices = $cached;
+	} else {
+		$choices = magic_page_essentials_query_location_filter_choices();
+		wp_cache_set( $cache_key, $choices, 'magic_page_essentials', MINUTE_IN_SECONDS * 5 );
+	}
+
+	/**
+	 * Filter location options shown on the Pages list.
+	 *
+	 * @param array<string,string> $choices Location id => label.
+	 */
+	$choices = apply_filters( 'magic_page_essentials_location_filter_choices', $choices );
+
+	return is_array( $choices ) ? $choices : array();
+}
+
+/**
+ * Unfiltered location id => label pairs.
+ *
+ * @return array<string,string>
+ */
+function magic_page_essentials_query_location_filter_choices() {
+
+	$choices = array();
+
+	if ( taxonomy_exists( 'location' ) ) {
+		$terms = get_terms(
+			array(
+				'taxonomy'   => 'location',
+				'hide_empty' => false,
+				'number'     => 500,
+				'orderby'    => 'name',
+				'order'      => 'ASC',
+			)
+		);
+		if ( ! is_wp_error( $terms ) ) {
+			foreach ( $terms as $term ) {
+				$choices[ (string) $term->term_id ] = $term->name;
+			}
+		}
+	}
+
+	global $wpdb;
+
+	// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Distinct location ids for an admin dropdown; cached by the caller.
+	$meta_values = $wpdb->get_col(
+		"SELECT DISTINCT pm.meta_value
+		FROM {$wpdb->postmeta} pm
+		INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id
+		WHERE pm.meta_key = '_location_id'
+		AND pm.meta_value != ''
+		AND p.post_type = 'page'
+		AND p.post_status IN ('publish','draft','pending')
+		LIMIT 500"
+	);
+	// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+
+	if ( is_array( $meta_values ) ) {
+		foreach ( $meta_values as $meta_value ) {
+			$key = (string) $meta_value;
+			if ( isset( $choices[ $key ] ) ) {
+				continue;
+			}
+			$label = $key;
+			$tid   = absint( $key );
+			if ( $tid > 0 && taxonomy_exists( 'location' ) ) {
+				$term = get_term( $tid, 'location' );
+				if ( $term && ! is_wp_error( $term ) ) {
+					$label = $term->name;
+				}
+			}
+			$choices[ $key ] = $label;
+		}
+	}
+
+	uasort(
+		$choices,
+		function ( $a, $b ) {
+			return strcasecmp( (string) $a, (string) $b );
+		}
+	);
+
+	return $choices;
+}
+
+/**
+ * Location filter dropdown on the Pages list.
+ *
+ * @return void
+ */
+function magic_page_essentials_add_magic_page_location_filter() {
+	global $typenow;
+	if ( 'page' !== $typenow ) {
+		return;
+	}
+
+	$locations = magic_page_essentials_get_location_filter_choices();
+	if ( empty( $locations ) ) {
+		return;
+	}
+
+	// phpcs:disable WordPress.Security.NonceVerification.Recommended -- GET filter for posts list.
+	$selected = '';
+	if ( isset( $_GET['_location_id'] ) ) {
+		$selected = sanitize_text_field( wp_unslash( $_GET['_location_id'] ) );
+	}
+	// phpcs:enable WordPress.Security.NonceVerification.Recommended
+
+	echo '<label class="screen-reader-text" for="mpe-filter-location">' . esc_html__( 'Filter by location', 'magic-page-essentials' ) . '</label>';
+	echo '<select name="_location_id" id="mpe-filter-location">';
+	echo '<option value="">' . esc_html__( 'All locations', 'magic-page-essentials' ) . '</option>';
+	foreach ( $locations as $location_id => $label ) {
+		printf(
+			'<option value="%s"%s>%s</option>',
+			esc_attr( (string) $location_id ),
+			selected( $selected, (string) $location_id, false ),
+			esc_html( (string) $label )
+		);
+	}
+	echo '</select>';
+}
+add_action( 'restrict_manage_posts', 'magic_page_essentials_add_magic_page_location_filter' );
+
+/**
+ * Filter pages by Magic Page location meta.
+ *
+ * @param WP_Query $query Query.
+ * @return void
+ */
+function magic_page_essentials_filter_pages_by_magic_page_location( $query ) {
+	global $pagenow;
+	if ( ! is_admin() || 'edit.php' !== $pagenow || ! $query->is_main_query() || 'page' !== $query->get( 'post_type' ) ) {
+		return;
+	}
+
+	// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Admin list filter.
+	if ( ! isset( $_GET['_location_id'] ) || '' === $_GET['_location_id'] ) {
+		return;
+	}
+	$location_id = sanitize_text_field( wp_unslash( $_GET['_location_id'] ) );
+	// phpcs:enable WordPress.Security.NonceVerification.Recommended
+
+	$meta_query   = $query->get( 'meta_query' );
+	$meta_query   = is_array( $meta_query ) ? $meta_query : array();
+	$meta_query[] = array(
+		'key'     => '_location_id',
+		'value'   => $location_id,
+		'compare' => '=',
+	);
+	$query->set( 'meta_query', $meta_query );
+}
+add_action( 'pre_get_posts', 'magic_page_essentials_filter_pages_by_magic_page_location', 11 );
