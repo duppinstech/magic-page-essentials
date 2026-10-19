@@ -1,6 +1,6 @@
 # Magic Page Essentials
 
-A companion plugin for WordPress that extends the [Magic Page Plugin](https://magicpageplugin.com/). Magic Page creates large numbers of SEO pages; this plugin keeps the admin organized and adds analytics so you can see how well those pages perform.
+A Duppins Technology add-on for sites that use the third-party [Magic Page Plugin](https://magicpageplugin.com/). Magic Page is a separate product. Duppins Technology does not make Magic Page, and the two products are not affiliated. Magic Page creates large numbers of SEO pages; this add-on keeps the admin organized and adds analytics so you can see how well those pages perform.
 
 ---
 
